@@ -21,6 +21,10 @@ font = pygame.font.Font("fonts/score.ttf", 60)
 #COLOR 
 white = (255,255,255)
 
+#GAME SOUND EFFECTS
+scoreSound = pygame.mixer.Sound("audio/ping.mp3")
+flySound = pygame.mixer.Sound("audio/fly.mp3")
+
 #GAME_VARIABLES
 ground_scroll = 0
 scroll_speed = 4
@@ -35,11 +39,21 @@ pass_pipe = False
 #LOAD_IMAGES
 bg = pygame.image.load('img/bg.png')
 ground_img = pygame.image.load('img/ground.png')
+button_img = pygame.image.load('img/restart.png')
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
 
+
+#DEFINES GAME RESTART BUTTON
+def reset_game():
+    pipe_group.empty()
+    flappy.rect.x = 100
+    flappy.rect.y = int(screen_height / 2)
+    flying = False
+    score = 0
+    return score
 
 #BIRD_CLASS
 class Bird(pygame.sprite.Sprite):
@@ -73,6 +87,7 @@ class Bird(pygame.sprite.Sprite):
             if pygame.mouse.get_pressed()[0] == 1 and self.clicked == False: #jumps when mouse is clicked
                 self.clicked = True
                 self.vel = -10
+                flySound.play()
             if pygame.mouse.get_pressed()[0] == 0: #disables long press fly
                 self.clicked = False
 
@@ -112,6 +127,31 @@ class Pipe(pygame.sprite.Sprite):
         if self.rect.right < 0: 
             self.kill()
 
+# BUTTON CLASS
+class Button():
+    def __init__(self, x, y, image):
+        self.image = image
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+
+    def draw(self):
+
+        clicked = False
+
+        # GET THE MOUSE POSITION
+        pos = pygame.mouse.get_pos()
+
+        # MOUSE HOVER TRIGGER
+        if self.rect.collidepoint(pos):
+            if pygame.mouse.get_pressed()[0] == 1:
+                clicked = True
+
+
+        #BUTTON RESTART
+        screen.blit(self.image, (self.rect.x, self.rect.y))
+
+        return clicked
+
 
 bird_group = pygame.sprite.Group()
 pipe_group = pygame.sprite.Group()
@@ -120,6 +160,9 @@ pipe_group = pygame.sprite.Group()
 flappy = Bird(100, int(screen_height / 2))
 
 bird_group.add(flappy)
+
+# RESTART BUTTON INS
+button = Button(screen_width // 2 - 50, screen_height // 2 - 100, button_img)
 
 run = True #sets the games if running
 
@@ -144,6 +187,7 @@ while run:
             pass_pipe = True
         if pass_pipe == True:
             if bird_group.sprites()[0].rect.left > pipe_group.sprites()[0].rect.right:
+                scoreSound.play()
                 score += 1
                 pass_pipe = False
 
@@ -179,6 +223,12 @@ while run:
             ground_scroll = 0
 
         pipe_group.update()
+
+    # CHECK FOR GAME OVER AND RESET
+    if game_over == True:
+        if button.draw() == True:
+            game_over = False
+            score = reset_game()
 
     for event in pygame.event.get():
         #quit the game
