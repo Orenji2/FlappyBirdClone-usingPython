@@ -4,4 +4,4 @@ This is my Version of Flappy Bird using python inspired by the original game but
 
 Note: It is not my intention to release this game and make profit on it
 
-Just ony for fun and my hobby
+Just only for fun and my hobby
